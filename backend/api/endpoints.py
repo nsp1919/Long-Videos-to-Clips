@@ -14,6 +14,9 @@ class JobRequest(BaseModel):
     captions: bool = False
     manual_start: Optional[str] = None
     manual_end: Optional[str] = None
+    manual_end: Optional[str] = None
+    enhance_4k: bool = False
+    merge_segments: Optional[list[dict]] = None # List of {start: "00:00", end: "00:10"}
 
 class UrlRequest(BaseModel):
     url: str

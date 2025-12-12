@@ -40,7 +40,7 @@ def cut_video(input_path: str, output_path: str, start: float, end: float):
     ]
     subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
-def burn_subtitles(video_path: str, srt_path: str, output_path: str):
+def burn_subtitles(video_path: str, srt_path: str, output_path: str, font_size: int = 26):
     # Hard burn subtitles
     # Note: path escaping for filters can be tricky on Windows.
     # Using forward slashes and escaping colon might be needed.
@@ -55,8 +55,44 @@ def burn_subtitles(video_path: str, srt_path: str, output_path: str):
     cmd = [
         "ffmpeg", "-y",
         "-i", video_path,
-        "-vf", f"subtitles='{srt_arg}':force_style='Alignment=10,Fontsize=26,MarginV=70,Outline=2,Shadow=1'",
+        "-vf", f"subtitles='{srt_arg}':force_style='Alignment=10,Fontsize={font_size},MarginV=70,Outline=2,Shadow=1'",
         "-c:a", "copy",
         output_path
     ]
     subprocess.run(cmd, check=True)
+
+def upscale_video(input_path: str, output_path: str):
+    # Upscale to 4k (3840x2160) using Lanczos and Unsharp Mask
+    cmd = [
+        "ffmpeg", "-y",
+        "-i", input_path,
+        "-vf", "scale=3840:2160:flags=lanczos,unsharp=5:5:1.0:5:5:0.0",
+        "-c:v", "libx264", "-preset", "veryfast", "-crf", "20", # slightly better quality for 4k
+        "-c:a", "copy",
+        output_path
+    ]
+    subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+def concat_videos(video_paths: list[str], output_path: str):
+    # Create a temporary file list for ffmpeg concat demuxer
+    list_path = output_path.replace(".mp4", ".txt")
+    # ffmpeg requires forward slashes and escaped paths in the list file
+    with open(list_path, "w", encoding="utf-8") as f:
+        for path in video_paths:
+            # Absolute path with forward slashes is safest for ffmpeg on windows
+            safe_path = os.path.abspath(path).replace("\\", "/")
+            f.write(f"file '{safe_path}'\n")
+    
+    cmd = [
+        "ffmpeg", "-y",
+        "-f", "concat",
+        "-safe", "0",
+        "-i", list_path,
+        "-c", "copy",
+        output_path
+    ]
+    try:
+        subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    finally:
+        if os.path.exists(list_path):
+            os.remove(list_path)
