@@ -1,6 +1,6 @@
 import os
 import math
-from .ffmpeg_utils import get_video_duration, extract_audio, cut_video, burn_subtitles, concat_videos
+from .ffmpeg_utils import get_video_duration, extract_audio, cut_video, burn_subtitles, concat_videos, upscale_video
 from .transcription import transcribe_audio
 
 def generate_srt(segments, output_path):
@@ -155,8 +155,6 @@ def process_job(job_id: str, job_config: dict, jobs_store: dict):
             if job_config.get('enhance_4k'):
                 jobs_store[job_id]["status"] = f"upscaling_{idx+1}"
                 upscaled_path = clip_path.replace(".mp4", "_4k.mp4")
-                # Import here to avoid circular or just use from line 3
-                from .ffmpeg_utils import upscale_video 
                 upscale_video(clip_path, upscaled_path)
                 final_clip_path = upscaled_path
                 current_font_size = 52 # Scale font for 4k
