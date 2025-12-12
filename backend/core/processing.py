@@ -67,8 +67,13 @@ def process_job(job_id: str, job_config: dict, jobs_store: dict):
 
         output_files = []
         
+        # Prepare base filename
+        base_name = os.path.splitext(job_config.get('filename', 'video.mp4'))[0]
+        # Clean filename
+        base_name = "".join([c if c.isalnum() else "_" for c in base_name])
+        
         for idx, (start, end) in enumerate(cuts):
-            clip_name = f"clip_{idx+1}.mp4"
+            clip_name = f"{base_name}_Part_{idx+1}.mp4"
             clip_path = f"temp/output/{job_id}_{clip_name}"
             
             jobs_store[job_id]["status"] = f"cutting_{idx+1}/{len(cuts)}"

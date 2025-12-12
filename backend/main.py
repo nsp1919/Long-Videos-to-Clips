@@ -32,6 +32,9 @@ os.makedirs("temp/output", exist_ok=True)
 def read_root():
     return {"message": "Local Shorts Generator API is running"}
 
+# Mount static directory for downloads
+app.mount("/static", StaticFiles(directory="temp/output"), name="static")
+
 # We will mount the frontend build later, or just run them separately for dev.
 # app.mount("/", StaticFiles(directory="../frontend/dist", html=True), name="static")
 

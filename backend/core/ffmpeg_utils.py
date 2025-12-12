@@ -55,7 +55,7 @@ def burn_subtitles(video_path: str, srt_path: str, output_path: str):
     cmd = [
         "ffmpeg", "-y",
         "-i", video_path,
-        "-vf", f"subtitles='{srt_arg}'",
+        "-vf", f"subtitles='{srt_arg}':force_style='Alignment=10,Fontsize=26,MarginV=70,Outline=2,Shadow=1'",
         "-c:a", "copy",
         output_path
     ]

@@ -7,3 +7,4 @@ faster-whisper
 webrtcvad
 google-generativeai
 python-dotenv
+yt-dlp

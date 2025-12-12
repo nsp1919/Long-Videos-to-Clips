@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Loader2, CheckCircle, AlertCircle, FileVideo, Rocket, X, Copy } from 'lucide-react';
+import { Loader2, CheckCircle, AlertCircle, FileVideo, Rocket, X, Copy, Download } from 'lucide-react';
 
 export default function JobStatus({ jobId, onReset }) {
     const [status, setStatus] = useState("initializing");
@@ -74,8 +74,15 @@ export default function JobStatus({ jobId, onReset }) {
                                     I will assume backend doesn't serve files yet, so I will list the path.
                                 */}
                                     <div className="flex items-center space-x-2">
+                                        <button
+                                            onClick={() => window.open(`http://localhost:8000/static/${file.split('/').pop()}`, '_blank')}
+                                            className="p-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg transition-colors"
+                                            title="Download Clip"
+                                        >
+                                            <Download className="w-4 h-4" />
+                                        </button>
                                         <span className="text-xs text-gray-500 font-mono bg-black/30 p-1 rounded hidden sm:inline-block truncate max-w-[200px]">
-                                            {file}
+                                            {file.split('/').pop()}
                                         </span>
                                         <button
                                             onClick={() => handleShare(file)}

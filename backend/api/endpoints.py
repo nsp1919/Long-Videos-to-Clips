@@ -15,7 +15,44 @@ class JobRequest(BaseModel):
     manual_start: Optional[str] = None
     manual_end: Optional[str] = None
 
+class UrlRequest(BaseModel):
+    url: str
+
 jobs = {}
+
+import yt_dlp
+
+@router.post("/process-url")
+async def process_url(req: UrlRequest):
+    try:
+        url = req.url
+        file_id = str(uuid.uuid4())
+        
+        ydl_opts = {
+            'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
+            'outtmpl': f'temp/uploads/{file_id}_%(title)s.%(ext)s',
+            'noplaylist': True,
+        }
+        
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=True)
+            filename = ydl.prepare_filename(info)
+            # Ensure we get the actual filename if it changed during download (e.g. sanitization)
+            # yt-dlp might sanitize characters differently. 
+            # A safer way relies on the output template but let's trust prepare_filename mostly.
+            # But the path needs to be relative to CWD if possible or absolute. 
+            # prepare_filename returns relative path if we set outtmpl relative.
+            
+            # Since sanitization happens, let's normalize. 
+            # However, we need to pass the path to the frontend so it can call /job.
+        
+        # We need the basename for display
+        final_filename = os.path.basename(filename)
+        
+        return {"id": file_id, "path": filename, "filename": final_filename}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/upload")
 async def upload_video(file: UploadFile = File(...)):
@@ -49,7 +86,18 @@ async def share_clip(req: ShareRequest):
             }
             
         with open(srt_path, "r", encoding="utf-8") as f:
-            transcript_text = f.read()
+            lines = f.readlines()
+            
+        # Basic SRT parsing to get just text
+        transcript_lines = []
+        for line in lines:
+            line = line.strip()
+            if not line: continue
+            if line.isdigit(): continue
+            if "-->" in line: continue
+            transcript_lines.append(line)
+            
+        transcript_text = " ".join(transcript_lines)
 
         data = generate_viral_metadata(transcript_text)
         return data
